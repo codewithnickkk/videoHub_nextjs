@@ -96,7 +96,7 @@ export default function LoginPage() {
     setError(null);
 
     const res = await signIn("credentials", {
-      redirect: false,
+      redirect: true,
       email,
       password,
     });
