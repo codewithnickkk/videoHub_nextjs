@@ -1,8 +1,87 @@
+// "use client";
+// import { getSession } from "next-auth/react";
+// import { useRouter } from "next/navigation";
+// import { signIn } from "next-auth/react";
+// import React, { useState } from "react";
+// import Link from "next/link";
+
+// export default function LoginPage() {
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [error, setError] = useState<string | null>(null);
+//   const router = useRouter();
+
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+//   e.preventDefault();
+//   setError(null);
+
+//   const res = await signIn("credentials", {
+//     redirect: false,
+//     email,
+//     password,
+//   });
+
+//   if (res?.ok) {
+//     // Wait for the session to be available before redirecting
+//     const waitForSession = async () => {
+//       for (let i = 0; i < 10; i++) { // max 1 second
+//         const session = await getSession();
+//         if (session) {
+//           router.push("/upload");
+//           return;
+//         }
+//         await new Promise((resolve) => setTimeout(resolve, 100));
+//       }
+//       // fallback if session never arrives
+//       router.push("/upload");
+//     };
+
+//     waitForSession();
+//   } else {
+//     setError("Invalid email or password");
+//   }
+// };
+
+
+//   return (
+//     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+//       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Login</h1>
+//       <form onSubmit={handleSubmit} className="space-y-5">
+//         <input
+//           type="email"
+//           placeholder="Email"
+//           value={email}
+//           onChange={(e) => setEmail(e.target.value)}
+//           className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+//           required
+//           aria-label="Email"
+//         />
+//         <input
+//           type="password"
+//           placeholder="Password"
+//           value={password}
+//           onChange={(e) => setPassword(e.target.value)}
+//           className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+//           required
+//           aria-label="Password"
+//         />
+//         {error && <p className="text-red-600 text-sm">{error}</p>}
+//         <button
+//           type="submit"
+//           className="w-full py-3 bg-amber-400 hover:bg-amber-600 text-white font-semibold rounded-md shadow-sm transition duration-300"
+//         >
+//           Login
+//         </button>
+//         <div className="flex justify-end">new user? <Link href={"/register"}>Register</Link></div>
+//       </form>
+//     </div>
+//   );
+// }
 "use client";
-import { getSession } from "next-auth/react";
+
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import React, { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -10,38 +89,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setError(null);
+    e.preventDefault();
+    setError(null);
 
-  const res = await signIn("credentials", {
-    redirect: false,
-    email,
-    password,
-  });
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
 
-  if (res?.ok) {
-    // Wait for the session to be available before redirecting
-    const waitForSession = async () => {
-      for (let i = 0; i < 10; i++) { // max 1 second
-        const session = await getSession();
-        if (session) {
-          router.push("/upload");
-          return;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      // fallback if session never arrives
+    if (!res?.ok) {
+      setError("Invalid email or password");
+    }
+  };
+
+  // ⏳ Redirect only when session is available after login
+  useEffect(() => {
+    if (status === "authenticated") {
       router.push("/upload");
-    };
-
-    waitForSession();
-  } else {
-    setError("Invalid email or password");
-  }
-};
-
+    }
+  }, [status, router]);
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
@@ -52,27 +122,27 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+          className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md"
           required
-          aria-label="Email"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+          className="w-full px-4 py-3 bg-gray-900 text-gray-100 placeholder-gray-400 border border-gray-700 rounded-md"
           required
-          aria-label="Password"
         />
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
-          className="w-full py-3 bg-amber-400 hover:bg-amber-600 text-white font-semibold rounded-md shadow-sm transition duration-300"
+          className="w-full py-3 bg-amber-400 hover:bg-amber-600 text-white font-semibold rounded-md"
         >
           Login
         </button>
-        <div className="flex justify-end">new user? <Link href={"/register"}>Register</Link></div>
+        <div className="flex justify-end">
+          New user? <Link href={"/register"} className="text-blue-600 ml-1">Register</Link>
+        </div>
       </form>
     </div>
   );
