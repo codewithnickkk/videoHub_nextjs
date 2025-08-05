@@ -1,6 +1,8 @@
-import { authOptions } from "../../../../lib/auth";
 import NextAuth from "next-auth";
+import { authOptions } from "../../../../lib/auth";
 
-const handler = NextAuth(authOptions);
+// add trustHost in a type-safe way
+const handler = NextAuth({ ...authOptions });
+(handler as any).trustHost = true;
 
 export { handler as GET, handler as POST };

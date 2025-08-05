@@ -14,6 +14,7 @@ export const authOptions: NextAuthOptions={
                 email: {label:"email", type:"text"},
                 password: {label:"password", type:"password"}
             },
+            
             async authorize(credentials){//authenticating if registered or not and authorized user is given access
                 if(!credentials?.email || !credentials.password){//checks if both fields are present
                     throw new Error("Missing Email or Password")
@@ -43,6 +44,7 @@ export const authOptions: NextAuthOptions={
             }
         })
     ],
+     // Important for Vercel
     callbacks:{//callback returns sessions=> which either can be stored in database or jwt (json web tokens=>client side)
         //we are using jwt
         async jwt({token, user}){
