@@ -1,5 +1,5 @@
 "use client";
-
+import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
@@ -12,21 +12,36 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
+  e.preventDefault();
+  setError(null);
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+  const res = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  });
 
-    if (res?.ok) {
+  if (res?.ok) {
+    // Wait for the session to be available before redirecting
+    const waitForSession = async () => {
+      for (let i = 0; i < 10; i++) { // max 1 second
+        const session = await getSession();
+        if (session) {
+          router.push("/upload");
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      // fallback if session never arrives
       router.push("/upload");
-    } else {
-      setError("Invalid email or password");
-    }
-  };
+    };
+
+    waitForSession();
+  } else {
+    setError("Invalid email or password");
+  }
+};
+
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
